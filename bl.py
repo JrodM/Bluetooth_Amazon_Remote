@@ -26,7 +26,7 @@ from dbus.mainloop.glib import DBusGMainLoop
 #define a bluez 5 profile object for our keyboard
 #
 
-class BlueToothBluezProfile(dbus.service.Object):
+class BluetoohBluezProfile(dbus.service.Object):
     fd = -1
 
     @dbus.service.method("org.bluez.Profile1",
@@ -68,7 +68,7 @@ class BlueToothBluezProfile(dbus.service.Object):
 #create a bluetooth device to emulate a HID keyboard, 
 # advertize a SDP record using our bluez profile class
 #
-class BlueToothDevice():
+class BluetoohDevice():
     #change these constants 
     MY_ADDRESS="B8:27:EB:6D:57:AC"
     MY_DEV_NAME="Jared_Amazon_Remote"
@@ -93,7 +93,7 @@ class BlueToothDevice():
     def init_bt_device(self):
 
 
-        print("Configuring for name "+BlueToothDevice.MY_DEV_NAME)
+        print("Configuring for name "+BluetoohDevice.MY_DEV_NAME)
 
         #set the device class to a keybord and set the name
         os.system("sudo hciconfig hcio name Jared_Amazon_Remote")
@@ -119,9 +119,9 @@ class BlueToothDevice():
         bus = dbus.SystemBus()
         manager = dbus.Interface(bus.get_object("org.bluez","/org/bluez"), "org.bluez.ProfileManager1")
 
-        profile = BlueToothBluezProfile(bus, BlueToothDevice.PROFILE_DBUS_PATH)
+        profile = BluetoohBluezProfile(bus, BluetoohDevice.PROFILE_DBUS_PATH)
 
-        manager.RegisterProfile(BlueToothDevice.PROFILE_DBUS_PATH, BlueToothDevice.UUID,opts)
+        manager.RegisterProfile(BluetoohDevice.PROFILE_DBUS_PATH, BluetoohDevice.UUID,opts)
 
         print("Profile registered ")
 
@@ -132,7 +132,7 @@ class BlueToothDevice():
         print("Reading service record")
 
         try:
-            fh = open(BlueToothDevice.SDP_RECORD_PATH, "r")
+            fh = open(BluetoohDevice.SDP_RECORD_PATH, "r")
         except:
             sys.exit("Could not open the sdp record. Exiting...")
 
@@ -175,13 +175,13 @@ class BlueToothDevice():
 #define a dbus service that can be used to send send strings as a gamepad remote
 #this will enable different clients to connect to and use 
 #the service
-class  BlueToothService(dbus.service.Object):
+class  BluetoohService(dbus.service.Object):
 
     def __init__(self):
 
         print("Setting up service")
         #create and setup our device
-        self.device= BlueToothDevice();
+        self.device= BluetoohDevice();
 
         #start listening for connections
         self.device.listen();
@@ -208,6 +208,6 @@ if __name__ == "__main__":
        sys.exit("Only root can run this script")
 
     DBusGMainLoop(set_as_default=True)
-    myservice = BlueToothService();
+    myservice = BluetoohService();
     gtk.main()
     

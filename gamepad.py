@@ -10,7 +10,7 @@ from dbus.mainloop.glib import DBusGMainLoop
 #import evdev # used to get input from the keyboard
 #from evdev import *
 #import keymap # used to map evdev input to hid keodes
-import bl as Bluetooth
+import bl as BT
 
 class Gamepad():
 
@@ -35,7 +35,7 @@ class Gamepad():
 
 DBusGMainLoop(set_as_default=True)
 g = Gamepad()
-myservice = Bluetooth.BluetoothService();
+myservice = BT.BluetoothService();
 
 for i in range(0,10):
 	myservice.send_pad(g.state)

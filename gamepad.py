@@ -35,7 +35,7 @@ class Gamepad():
 
 DBusGMainLoop(set_as_default=True)
 g = Gamepad()
-myservice = Bluetooth.BTKbService();
+myservice = Bluetooth.BluetoothService();
 
 for i in range(0,10):
 	myservice.send_pad(g.state)

@@ -1,11 +1,7 @@
 #!/usr/bin/python
-#
-# YAPTB Bluetooth keyboard emulator DBUS Service
-# 
+
 # Adapted from 
 # www.linuxuser.co.uk/tutorials/emulate-bluetooth-keyboard-with-the-raspberry-pi
-#
-#
 
 #from __future__ import absolute_import, print_function, unicode_literals
 from __future__ import absolute_import, print_function
@@ -30,7 +26,7 @@ from dbus.mainloop.glib import DBusGMainLoop
 #define a bluez 5 profile object for our keyboard
 #
 
-class BTKbBluezProfile(dbus.service.Object):
+class BlueToothBluezProfile(dbus.service.Object):
     fd = -1
 
     @dbus.service.method("org.bluez.Profile1",
@@ -72,7 +68,7 @@ class BTKbBluezProfile(dbus.service.Object):
 #create a bluetooth device to emulate a HID keyboard, 
 # advertize a SDP record using our bluez profile class
 #
-class BTKbDevice():
+class BlueToothDevice():
     #change these constants 
     MY_ADDRESS="B8:27:EB:6D:57:AC"
     MY_DEV_NAME="Jared_Amazon_Remote"
@@ -97,7 +93,7 @@ class BTKbDevice():
     def init_bt_device(self):
 
 
-        print("Configuring for name "+BTKbDevice.MY_DEV_NAME)
+        print("Configuring for name "+BlueToothDevice.MY_DEV_NAME)
 
         #set the device class to a keybord and set the name
         os.system("sudo hciconfig hcio name Jared_Amazon_Remote")
@@ -123,9 +119,9 @@ class BTKbDevice():
         bus = dbus.SystemBus()
         manager = dbus.Interface(bus.get_object("org.bluez","/org/bluez"), "org.bluez.ProfileManager1")
 
-        profile = BTKbBluezProfile(bus, BTKbDevice.PROFILE_DBUS_PATH)
+        profile = BlueToothBluezProfile(bus, BlueToothDevice.PROFILE_DBUS_PATH)
 
-        manager.RegisterProfile(BTKbDevice.PROFILE_DBUS_PATH, BTKbDevice.UUID,opts)
+        manager.RegisterProfile(BlueToothDevice.PROFILE_DBUS_PATH, BlueToothDevice.UUID,opts)
 
         print("Profile registered ")
 
@@ -136,7 +132,7 @@ class BTKbDevice():
         print("Reading service record")
 
         try:
-            fh = open(BTKbDevice.SDP_RECORD_PATH, "r")
+            fh = open(BlueToothDevice.SDP_RECORD_PATH, "r")
         except:
             sys.exit("Could not open the sdp record. Exiting...")
 
@@ -176,21 +172,16 @@ class BTKbDevice():
 
 
 
-#define a dbus service that emulates a bluetooth keyboard
+#define a dbus service that can be used to send send strings as a gamepad remote
 #this will enable different clients to connect to and use 
 #the service
-class  BTKbService(dbus.service.Object):
+class  BlueToothService(dbus.service.Object):
 
     def __init__(self):
 
         print("Setting up service")
-
-        #set up as a dbus service
-       # bus_name=dbus.service.BusName("org.yaptb.btkbservice",bus=dbus.SystemBus())
-        #dbus.service.Object.__init__(self,bus_name,"/org/yaptb/btkbservice")
-
         #create and setup our device
-        self.device= BTKbDevice();
+        self.device= BlueToothDevice();
 
         #start listening for connections
         self.device.listen();
@@ -217,6 +208,6 @@ if __name__ == "__main__":
        sys.exit("Only root can run this script")
 
     DBusGMainLoop(set_as_default=True)
-    myservice = BTKbService();
+    myservice = BlueToothService();
     gtk.main()
     

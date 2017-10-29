@@ -10,15 +10,13 @@ from dbus.mainloop.glib import DBusGMainLoop
 #import evdev # used to get input from the keyboard
 #from evdev import *
 #import keymap # used to map evdev input to hid keodes
-import bl as BT
+from bl import BluetoothService
 
 class Gamepad():
 
 	def __init__(self):
 
 		#self.buttons = keytable
-
-#used wireshark to sniff bluetooth packets. I realized that the packet I was using wasn't standardized and packets tend not to be.
 
 #I have the gamepad sdp working but might copy the amazon controller if  have to.
 		self.state = [
@@ -32,13 +30,13 @@ class Gamepad():
 			0x02, #left 
 			]
 
+while 1==1:
+  DBusGMainLoop(set_as_default=True)
+  g = Gamepad()
+  myservice = BluetoothService();
 
-DBusGMainLoop(set_as_default=True)
-g = Gamepad()
-myservice = BT.BluetoothService();
-
-for i in range(0,10):
-	myservice.send_pad(g.state)
+  for i in range(0,10):
+	  myservice.send_pad(g.state)
 
 
 

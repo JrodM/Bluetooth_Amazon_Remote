@@ -73,7 +73,6 @@ class BT_BluezProfile(dbus.service.Object):
 #
 class BT_Device():
     #change these constants 
-    MY_ADDRESS="C8:FF:28:27:6B:4E"
     MY_DEV_NAME="Jareds_Remote"
 
     #define some constants
@@ -200,7 +199,6 @@ class  BT_Service(dbus.service.Object):
 
         cmd_str=""
 
-        count=0
         for key_code in keys:
 	  cmd_str+=chr(key_code)
             

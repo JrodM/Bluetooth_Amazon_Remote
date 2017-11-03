@@ -1,7 +1,11 @@
 #!/usr/bin/python
-
+#
+# YAPTB Bluetooth keyboard emulator DBUS Service
+# 
 # Adapted from 
 # www.linuxuser.co.uk/tutorials/emulate-bluetooth-keyboard-with-the-raspberry-pi
+#
+#
 
 #from __future__ import absolute_import, print_function, unicode_literals
 from __future__ import absolute_import, print_function
@@ -25,8 +29,7 @@ from dbus.mainloop.glib import DBusGMainLoop
 #
 #define a bluez 5 profile object for our keyboard
 #
-
-class BluetoothBluezProfile(dbus.service.Object):
+class BT_BluezProfile(dbus.service.Object):
     fd = -1
 
     @dbus.service.method("org.bluez.Profile1",
@@ -41,7 +44,6 @@ class BluetoothBluezProfile(dbus.service.Object):
             print("Cancel")
 
     @dbus.service.method("org.bluez.Profile1", in_signature="oha{sv}", out_signature="")
-
     def NewConnection(self, path, fd, properties):
             self.fd = fd.take()
             print("NewConnection(%s, %d)" % (path, self.fd))
@@ -51,8 +53,9 @@ class BluetoothBluezProfile(dbus.service.Object):
                     else:
                             print("  %s = %s" % (key, properties[key]))
             
-    @dbus.service.method("org.bluez.Profile1", in_signature="o", out_signature="")
 
+
+    @dbus.service.method("org.bluez.Profile1", in_signature="o", out_signature="")
     def RequestDisconnection(self, path):
             print("RequestDisconnection(%s)" % (path))
 
@@ -68,16 +71,16 @@ class BluetoothBluezProfile(dbus.service.Object):
 #create a bluetooth device to emulate a HID keyboard, 
 # advertize a SDP record using our bluez profile class
 #
-class BluetoothDevice():
+class BT_Device():
     #change these constants 
-    MY_ADDRESS="B8:27:EB:6D:57:AC"
-    MY_DEV_NAME="Jared_Amazon_Remote"
+    MY_ADDRESS="C8:FF:28:27:6B:4E"
+    MY_DEV_NAME="Jareds_Remote"
 
     #define some constants
     P_CTRL =17  #Service port - must match port configured in SDP record
     P_INTR =19  #Service port - must match port configured in SDP record#Interrrupt port  
-    PROFILE_DBUS_PATH="/org/bluez/Profile1" #dbus path of  the bluez profile we will create
-    SDP_RECORD_PATH = sys.path[0] + "/remote.xml" #file path of the sdp record to laod
+    PROFILE_DBUS_PATH="/bluez/jared/test_profile" #dbus path of  the bluez profile we will create
+    SDP_RECORD_PATH = sys.path[0] + "/remote_sdp.xml" #file path of the sdp record to laod
     UUID="00001124-0000-1000-8000-00805f9b34fb"
              
  
@@ -87,18 +90,22 @@ class BluetoothDevice():
 
         self.init_bt_device()
         self.init_bluez_profile()
+	self.init_bt_device()
                     
 
     #configure the bluetooth hardware device
     def init_bt_device(self):
 
 
-        print("Configuring for name "+BluetoothDevice.MY_DEV_NAME)
+        print("Configuring for name "+BT_Device.MY_DEV_NAME)
 
         #set the device class to a keybord and set the name
-        os.system("sudo hciconfig hcio name Jared_Amazon_Remote")
-	os.system("sudo hciconfig hcio class 0x000508")
-	os.system("sudo hciconfig hcio piscan")
+        os.system("hciconfig hcio class 0x000508")
+        os.system("hciconfig hcio name " + BT_Device.MY_DEV_NAME)
+
+        #make the device discoverable
+        os.system("hciconfig hcio piscan")
+
 
     #set up a bluez profile to advertise device capabilities from a loaded service record
     def init_bluez_profile(self):
@@ -112,16 +119,16 @@ class BluetoothDevice():
             "ServiceRecord":service_record,
             "Role":"server",
             "RequireAuthentication":False,
-            "RequireAuthorization":False,
+            "RequireAuthorization":False
         }
 
         #retrieve a proxy for the bluez profile interface
         bus = dbus.SystemBus()
         manager = dbus.Interface(bus.get_object("org.bluez","/org/bluez"), "org.bluez.ProfileManager1")
 
-        profile = BluetoothBluezProfile(bus, BluetoothDevice.PROFILE_DBUS_PATH)
+        profile = BT_BluezProfile(bus, BT_Device.PROFILE_DBUS_PATH)
 
-        manager.RegisterProfile(BluetoothDevice.PROFILE_DBUS_PATH, BluetoothDevice.UUID,opts)
+        manager.RegisterProfile(BT_Device.PROFILE_DBUS_PATH, BT_Device.UUID,opts)
 
         print("Profile registered ")
 
@@ -132,7 +139,7 @@ class BluetoothDevice():
         print("Reading service record")
 
         try:
-            fh = open(BluetoothDevice.SDP_RECORD_PATH, "r")
+            fh = open(BT_Device.SDP_RECORD_PATH, "r")
         except:
             sys.exit("Could not open the sdp record. Exiting...")
 
@@ -151,7 +158,7 @@ class BluetoothDevice():
 
         #bind these sockets to a port - port zero to select next available		
         self.scontrol.bind(("",self.P_CTRL))
-        self.sinterrupt.bind(("",self.P_INTR))
+        self.sinterrupt.bind(("",self.P_INTR ))
 
         #Start listening on the server sockets 
         self.scontrol.listen(1) # Limit of 1 connection
@@ -167,39 +174,38 @@ class BluetoothDevice():
     #send a string to the bluetooth host machine
     def send_string(self,message):
 
-         print(message)
+     #    print("Sending "+message)
          self.cinterrupt.send(message)
 
 
 
-#define a dbus service that can be used to send send strings as a gamepad remote
+#define a dbus service that emulates a bluetooth keyboard
 #this will enable different clients to connect to and use 
 #the service
-
-class BluetoothService(dbus.service.Object):
+class  BT_Service(dbus.service.Object):
 
     def __init__(self):
 
         print("Setting up service")
+
         #create and setup our device
-        self.device= BluetoothDevice();
+        self.device= BT_Device();
 
         #start listening for connections
         self.device.listen();
 
-
-    @dbus.service.method("org.bluez.Profile1", in_signature='ay')
-    def send_pad(self,keys):
+            
+   # @dbus.service.method('org.yaptb.btkbservice', in_signature='ay')
+    def send_keys(self,modifier_byte,keys):
 
         cmd_str=""
-        print(keys)
+
+        count=0
         for key_code in keys:
-            
-            cmd_str+=chr(key_code)
+	  cmd_str+=chr(key_code)
             
 
-            
-        self.device.send_string(cmd_str);
+        self.device.send_string(cmd_str);		
 
 
 #main routine
@@ -209,6 +215,6 @@ if __name__ == "__main__":
        sys.exit("Only root can run this script")
 
     DBusGMainLoop(set_as_default=True)
-    myservice = BluetoothService();
+    myservice = BT_Service();
     gtk.main()
     

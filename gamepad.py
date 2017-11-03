@@ -35,7 +35,7 @@ while 1==1:
   g = Gamepad()
   myservice = BluetoothService();
 
-  for i in range(0,10):
+  for i in range(0,100):
 	  myservice.send_pad(g.state)
 
 
